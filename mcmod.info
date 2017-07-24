@@ -1,0 +1,11 @@
+[{
+  "modid": "treecutter",
+  "name": "TreeCutter",
+  "description": "Smart lumbering for you",
+  "version": "1.0.0",
+  "logoFile": "logo.png",
+  "url": "https://kegare.github.io",
+  "authorList": ["kegare"],
+  "credits": "Authored by kegare",
+  "useDependencyInformation": true
+}]

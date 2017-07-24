@@ -1,4 +1,4 @@
-# Cavern
+# TreeCutter
 Minecraft mod. Smart lumbering for you!
 
 ----

@@ -1,0 +1,16 @@
+
+treecutter.config.title=TreeCutterの設定
+treecutter.config.effectiveItems=効果のあるアイテム
+treecutter.config.effectiveItems.tooltip=伐採効果のあるアイテムを指定します。何も指定しなければ、自動で判別されます。
+treecutter.config.treeHardness=伐採時の木の硬さ
+treecutter.config.treeHardness.tooltip=伐採時の木の硬さを指定します。数値が大きいほど硬くなります。
+treecutter.config.sneakAction=しゃがんで伐採
+treecutter.config.sneakAction.tooltip=しゃがんでいるときだけ伐採できるようにします。
+
+treecutter.gui.detail=詳細情報
+treecutter.gui.detail.hover=詳細情報を表示します。
+treecutter.gui.instant=インスタントフィルター
+treecutter.gui.instant.hover=フィルターテキストボックスに文字を入力すると瞬時にフィルタリングします。
+treecutter.gui.select.item=アイテムを選択してください
+treecutter.gui.select.item.multiple=アイテムを選択してください
+treecutter.gui.select.item.selected=%dつのアイテムが選択済み

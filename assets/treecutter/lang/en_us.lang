@@ -1,0 +1,16 @@
+
+treecutter.config.title=TreeCutter Configuration
+treecutter.config.effectiveItems=Effective Items
+treecutter.config.effectiveItems.tooltip=Specify the effective items for lumbering. If you do not specify anything, it will be checked automatically.
+treecutter.config.treeHardness=Tree Hardness
+treecutter.config.treeHardness.tooltip=Specify the tree hardness for lumbering.
+treecutter.config.sneakAction=Sneak Action
+treecutter.config.sneakAction.tooltip=Wether to require sneak action for lumbering.
+
+treecutter.gui.detail=Detail info
+treecutter.gui.detail.hover=Display detailed information.
+treecutter.gui.instant=Instant filter
+treecutter.gui.instant.hover=Filter instantly when enter character in filter-textbox.
+treecutter.gui.select.item=Select the item
+treecutter.gui.select.item.multiple=Select the items
+treecutter.gui.select.item.selected=%d items selected
