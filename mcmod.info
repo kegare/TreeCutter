@@ -2,7 +2,7 @@
   "modid": "treecutter",
   "name": "TreeCutter",
   "description": "Smart lumbering for you",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "logoFile": "logo.png",
   "url": "https://kegare.github.io",
   "authorList": ["kegare"],

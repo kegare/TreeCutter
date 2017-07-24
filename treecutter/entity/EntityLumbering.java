@@ -1,8 +1,10 @@
 package treecutter.entity;
 
 import java.util.PriorityQueue;
+import java.util.Set;
 
 import com.google.common.collect.Queues;
+import com.google.common.collect.Sets;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -26,7 +28,10 @@ public class EntityLumbering extends Entity
 	protected int delayTime = 10;
 	protected int breakCount;
 
-	protected PriorityQueue<BlockPos> lumberTargets;
+	protected IBlockState leafState;
+
+	protected PriorityQueue<BlockPos> lumberTargets, lumberLeaves;
+	protected Set<BlockPos> decayedLeaves;
 
 	public EntityLumbering(World world)
 	{
@@ -49,6 +54,9 @@ public class EntityLumbering extends Entity
 	public void checkForLumbering()
 	{
 		lumberTargets = Queues.newPriorityQueue();
+		lumberLeaves = Queues.newPriorityQueue();
+		decayedLeaves = Sets.newHashSet();
+
 		checkPos = originPos;
 
 		checkBranch();
@@ -61,7 +69,7 @@ public class EntityLumbering extends Entity
 
 	public int getTargetCount()
 	{
-		return lumberTargets == null || !hasLeaf ? 0 : lumberTargets.size();
+		return lumberTargets == null || lumberLeaves == null || lumberLeaves.size() < 1 ? 0 : lumberTargets.size();
 	}
 
 	public int getBreakCount()
@@ -93,40 +101,65 @@ public class EntityLumbering extends Entity
 		while (flag);
 	}
 
-	protected boolean offer(BlockPos target)
+	protected boolean offer(BlockPos pos)
 	{
-		if (validTarget(target) && !lumberTargets.contains(target))
+		if (validTarget(pos) && !lumberTargets.contains(pos))
 		{
-			checkPos = target;
+			checkPos = pos;
 
-			return lumberTargets.offer(target);
+			return lumberTargets.offer(pos);
+		}
+
+		if (validLeaf(pos) && !lumberLeaves.contains(pos))
+		{
+			if (lumberLeaves.isEmpty())
+			{
+				leafState = world.getBlockState(pos);
+			}
+
+			return lumberLeaves.offer(pos);
 		}
 
 		return false;
 	}
 
-	protected boolean validTarget(BlockPos target)
+	protected boolean validTarget(BlockPos pos)
 	{
-		IBlockState state = world.getBlockState(target);
+		IBlockState state = world.getBlockState(pos);
 
-		if (state.getBlock().isAir(state, world, target) || state.getBlockHardness(world, target) < 0.0F)
+		if (state.getBlock().isAir(state, world, pos) || state.getBlockHardness(world, pos) < 0.0F)
 		{
 			return false;
 		}
 
-		if (target.getY() < originPos.getY())
+		if (pos.getY() < originPos.getY())
 		{
-			return false;
-		}
-
-		if (TreeCutterUtils.isTreeLeaves(state) || state.getBlock().isLeaves(state, world, target))
-		{
-			hasLeaf = true;
-
 			return false;
 		}
 
 		return TreeCutterUtils.isLogWood(state);
+	}
+
+	protected boolean validLeaf(BlockPos pos)
+	{
+		IBlockState state = world.getBlockState(pos);
+
+		if (state.getBlock().isAir(state, world, pos))
+		{
+			return false;
+		}
+
+		if (pos.getY() <= originPos.getY())
+		{
+			return false;
+		}
+
+		if (leafState != null)
+		{
+			return state.getBlock() == leafState.getBlock() && state.getBlock().getMetaFromState(state) == leafState.getBlock().getMetaFromState(leafState);
+		}
+
+		return TreeCutterUtils.isTreeLeaves(state, world, pos);
 	}
 
 	@Override
@@ -146,27 +179,38 @@ public class EntityLumbering extends Entity
 			return;
 		}
 
-		if (lumberTargets == null)
+		if (lumberTargets == null || lumberLeaves == null)
 		{
 			checkForLumbering();
+
+			return;
 		}
-		else if (lumberTargets.isEmpty() && currentPos != null)
+
+		if (lumberLeaves.isEmpty())
 		{
-			int range = 4;
+			setDead();
 
-			for (BlockPos pos : BlockPos.getAllInBox(currentPos.add(range, range, range), currentPos.add(-range, -range, -range)))
+			return;
+		}
+		else if (lumberTargets.isEmpty())
+		{
+			currentPos = lumberLeaves.poll();
+
+			if (currentPos != null)
 			{
-				IBlockState state = world.getBlockState(pos);
-				Block block = state.getBlock();
-
-				if (TreeCutterUtils.isTreeLeaves(state) || block.isLeaves(state, world, pos))
+				for (BlockPos pos : BlockPos.getAllInBox(currentPos.add(4, 4, 4), currentPos.add(-4, -4, -4)))
 				{
-					world.scheduleBlockUpdate(pos, block, 20 + rand.nextInt(8), 1);
-					world.playEvent(2001, pos, Block.getStateId(state));
+					IBlockState state = world.getBlockState(pos);
+
+					if (TreeCutterUtils.isTreeLeaves(state, world, pos) && !decayedLeaves.contains(pos))
+					{
+						world.scheduleBlockUpdate(pos, state.getBlock(), 20 + rand.nextInt(8), 1);
+						world.playEvent(2001, pos, Block.getStateId(state));
+
+						decayedLeaves.add(pos);
+					}
 				}
 			}
-
-			setDead();
 
 			return;
 		}

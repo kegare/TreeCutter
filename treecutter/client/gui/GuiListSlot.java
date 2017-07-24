@@ -20,6 +20,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.oredict.OreDictionary;
+import treecutter.util.BlockMeta;
 
 @SideOnly(Side.CLIENT)
 public abstract class GuiListSlot extends GuiSlot
@@ -126,5 +127,27 @@ public abstract class GuiListSlot extends GuiSlot
 		int meta = state.getBlock().getMetaFromState(state);
 
 		drawItemStack(renderer, new ItemStack(item, 1, meta), x, y, fontRenderer, overlay);
+	}
+
+	public void drawItemStack(RenderItem renderer, @Nullable BlockMeta blockMeta, int x, int y)
+	{
+		drawItemStack(renderer, blockMeta, x, y, null, null);
+	}
+
+	public void drawItemStack(RenderItem renderer, @Nullable BlockMeta blockMeta, int x, int y, FontRenderer fontRenderer, @Nullable String overlay)
+	{
+		if (blockMeta == null)
+		{
+			return;
+		}
+
+		Item item = Item.getItemFromBlock(blockMeta.getBlock());
+
+		if (item == Items.AIR)
+		{
+			return;
+		}
+
+		drawItemStack(renderer, new ItemStack(item, 1, blockMeta.getMeta()), x, y, fontRenderer, overlay);
 	}
 }

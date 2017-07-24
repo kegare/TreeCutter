@@ -96,11 +96,7 @@ public class LumberingEventHooks
 
 		if (entity == null)
 		{
-			if (player.capabilities.isCreativeMode)
-			{
-				entity = LumberingUnit.get(player).getLumbering(pos);
-			}
-			else return;
+			entity = LumberingUnit.get(player).getLumbering(pos);
 		}
 
 		if (entity.getOriginPos() != pos)

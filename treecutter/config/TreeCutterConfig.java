@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Level;
 
 import com.google.common.collect.Lists;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.translation.I18n;
 import net.minecraftforge.common.config.Configuration;
@@ -15,6 +16,7 @@ import net.minecraftforge.fml.client.config.GuiConfigEntries.IConfigEntry;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import treecutter.client.config.SelectBlocksEntry;
 import treecutter.client.config.SelectItemsEntry;
 import treecutter.util.TreeCutterLog;
 import treecutter.util.TreeCutterUtils;
@@ -24,14 +26,16 @@ public class TreeCutterConfig
 	public static Configuration config;
 
 	public static ConfigItems effectiveItems = new ConfigItems();
+	public static ConfigBlocks excludedBlocks = new ConfigBlocks();
 	public static double treeHardness;
 	public static boolean sneakAction;
 
-	public static Class<? extends IConfigEntry> selectItems;
+	public static Class<? extends IConfigEntry> selectBlocks, selectItems;
 
 	@SideOnly(Side.CLIENT)
 	public static void initEntries()
 	{
+		selectBlocks = SelectBlocksEntry.class;
 		selectItems = SelectItemsEntry.class;
 	}
 
@@ -80,6 +84,14 @@ public class TreeCutterConfig
 		propOrder.add(prop.getName());
 		effectiveItems.setValues(prop.getStringList());
 
+		prop = config.get(category, "excludedBlocks", new String[0]);
+		prop.setConfigEntryClass(selectBlocks);
+		prop.setLanguageKey("treecutter.config." + prop.getName());
+		comment = I18n.translateToLocal(prop.getLanguageKey() + ".tooltip");
+		prop.setComment(comment);
+		propOrder.add(prop.getName());
+		excludedBlocks.setValues(prop.getStringList());
+
 		prop = config.get(category, "treeHardness", 1.5D);
 		prop.setMinValue(0.0D).setMaxValue(10.0D);
 		prop.setLanguageKey("treecutter.config." + prop.getName());
@@ -100,6 +112,14 @@ public class TreeCutterConfig
 		if (config.hasChanged())
 		{
 			config.save();
+		}
+	}
+
+	public static void refreshBlocks()
+	{
+		if (excludedBlocks != null)
+		{
+			excludedBlocks.refreshBlocks();
 		}
 	}
 
@@ -124,5 +144,15 @@ public class TreeCutterConfig
 		}
 
 		return effectiveItems.hasItemStack(stack);
+	}
+
+	public static boolean isValidTargetBlock(IBlockState state)
+	{
+		if (excludedBlocks == null || excludedBlocks.isEmpty())
+		{
+			return true;
+		}
+
+		return !excludedBlocks.hasBlockState(state);
 	}
 }

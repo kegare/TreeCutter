@@ -48,6 +48,7 @@ public class TreeCutter
 	@EventHandler
 	public void serverStarting(FMLServerStartingEvent event)
 	{
+		TreeCutterConfig.refreshBlocks();
 		TreeCutterConfig.refreshItems();
 	}
 }
