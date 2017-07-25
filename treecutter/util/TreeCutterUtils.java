@@ -15,13 +15,21 @@ import net.minecraft.block.BlockLeaves;
 import net.minecraft.block.BlockLog;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemAxe;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.management.PlayerInteractionManager;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.common.DummyModContainer;
+import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.common.ModContainer;
 import net.minecraftforge.oredict.OreDictionary;
 import treecutter.config.TreeCutterConfig;
+import treecutter.core.TreeCutter;
 
 public class TreeCutterUtils
 {
@@ -133,6 +141,31 @@ public class TreeCutterUtils
 		return false;
 	}
 
+	public static boolean harvestBlock(EntityPlayer entityPlayer, BlockPos pos)
+	{
+		if (entityPlayer == null || !(entityPlayer instanceof EntityPlayerMP))
+		{
+			return false;
+		}
+
+		EntityPlayerMP player = (EntityPlayerMP)entityPlayer;
+		WorldServer world = player.getServerWorld();
+		PlayerInteractionManager im = player.interactionManager;
+		IBlockState state = world.getBlockState(pos);
+
+		if (im.tryHarvestBlock(pos))
+		{
+			if (TreeCutter.proxy.isSinglePlayer())
+			{
+				world.playEvent(2001, pos, Block.getStateId(state));
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+
 	public static int compareWithNull(Object o1, Object o2)
 	{
 		return (o1 == null ? 1 : 0) - (o2 == null ? 1 : 0);
@@ -221,5 +254,22 @@ public class TreeCutterUtils
 		}
 
 		return false;
+	}
+
+	public static ModContainer getModContainer()
+	{
+		ModContainer mod = Loader.instance().getIndexedModList().get(TreeCutter.MODID);
+
+		if (mod == null)
+		{
+			mod = Loader.instance().activeModContainer();
+
+			if (mod == null || !TreeCutter.MODID.equals(mod.getModId()))
+			{
+				return new DummyModContainer(TreeCutter.metadata);
+			}
+		}
+
+		return mod;
 	}
 }

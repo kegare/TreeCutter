@@ -32,6 +32,7 @@ public class TreeCutterConfig
 	public static ConfigBlocks excludedBlocks = new ConfigBlocks();
 	public static double treeHardness;
 	public static boolean sneakAction;
+	public static boolean versionNotice;
 
 	public static Class<? extends IConfigEntry> selectBlocks, selectItems;
 
@@ -128,6 +129,16 @@ public class TreeCutterConfig
 		prop.setComment(comment);
 		propOrder.add(prop.getName());
 		sneakAction = prop.getBoolean(sneakAction);
+
+		if (side.isClient())
+		{
+			prop = config.get(category, "versionNotice", true);
+			prop.setLanguageKey("treecutter.config." + prop.getName());
+			comment = I18n.translateToLocal(prop.getLanguageKey() + ".tooltip");
+			prop.setComment(comment);
+			propOrder.add(prop.getName());
+			versionNotice = prop.getBoolean(versionNotice);
+		}
 
 		config.setCategoryPropertyOrder(category, propOrder);
 

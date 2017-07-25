@@ -1,74 +1,50 @@
 package treecutter.entity;
 
-import java.util.PriorityQueue;
 import java.util.Set;
 
-import com.google.common.collect.Queues;
 import com.google.common.collect.Sets;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.server.management.PlayerInteractionManager;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import treecutter.capability.LumberingUnit;
-import treecutter.core.TreeCutter;
+import treecutter.util.LumberingSnapshot;
 import treecutter.util.TreeCutterUtils;
 
 public class EntityLumbering extends Entity
 {
-	protected EntityPlayer entityPlayer;
-	protected BlockPos originPos, checkPos, currentPos;
+	protected final EntityPlayer entityPlayer;
+	protected final LumberingSnapshot snapshot;
+
+	protected BlockPos currentPos;
 
 	protected int delayTime = 10;
 	protected int breakCount;
 
-	protected IBlockState leafState;
-
-	protected PriorityQueue<BlockPos> lumberTargets, lumberLeaves;
-	protected Set<BlockPos> decayedLeaves;
+	protected final Set<BlockPos> decayedLeaves = Sets.newHashSet();
 
 	public EntityLumbering(World world)
 	{
 		super(world);
-	}
-
-	public EntityLumbering(World world, EntityPlayer player)
-	{
-		this(world);
-		this.entityPlayer = player;
+		this.entityPlayer = null;
+		this.snapshot = null;
 	}
 
 	public EntityLumbering(World world, EntityPlayer player, BlockPos pos)
 	{
-		this(world, player);
-		this.originPos = pos;
-		this.setPosition(pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D);
+		this(new LumberingSnapshot(world, pos), player);
 	}
 
-	public void checkForLumbering()
+	public EntityLumbering(LumberingSnapshot snapshot, EntityPlayer player)
 	{
-		lumberTargets = Queues.newPriorityQueue();
-		lumberLeaves = Queues.newPriorityQueue();
-		decayedLeaves = Sets.newHashSet();
-
-		checkPos = originPos;
-
-		checkBranch();
-	}
-
-	public BlockPos getOriginPos()
-	{
-		return originPos;
-	}
-
-	public int getTargetCount()
-	{
-		return lumberTargets == null || lumberLeaves == null || lumberLeaves.size() < 1 ? 0 : lumberTargets.size();
+		super(snapshot.getWorld());
+		this.entityPlayer = player;
+		this.snapshot = snapshot;
+		this.setPosition(snapshot.getOriginPos().getX() + 0.5D, snapshot.getOriginPos().getY() + 0.5D, snapshot.getOriginPos().getZ() + 0.5D);
 	}
 
 	public int getBreakCount()
@@ -76,93 +52,8 @@ public class EntityLumbering extends Entity
 		return breakCount;
 	}
 
-	protected void checkBranch()
-	{
-		boolean flag;
-
-		do
-		{
-			flag = false;
-
-			for (BlockPos pos : BlockPos.getAllInBox(checkPos.add(1, 1, 1), checkPos.add(-1, -1, -1)))
-			{
-				if (offer(pos))
-				{
-					checkBranch();
-
-					if (!flag)
-					{
-						flag = true;
-					}
-				}
-			}
-		}
-		while (flag);
-	}
-
-	protected boolean offer(BlockPos pos)
-	{
-		if (validTarget(pos) && !lumberTargets.contains(pos))
-		{
-			checkPos = pos;
-
-			return lumberTargets.offer(pos);
-		}
-
-		if (validLeaf(pos) && !lumberLeaves.contains(pos))
-		{
-			if (lumberLeaves.isEmpty())
-			{
-				leafState = world.getBlockState(pos);
-			}
-
-			return lumberLeaves.offer(pos);
-		}
-
-		return false;
-	}
-
-	protected boolean validTarget(BlockPos pos)
-	{
-		IBlockState state = world.getBlockState(pos);
-
-		if (state.getBlock().isAir(state, world, pos) || state.getBlockHardness(world, pos) < 0.0F)
-		{
-			return false;
-		}
-
-		if (pos.getY() < originPos.getY())
-		{
-			return false;
-		}
-
-		return TreeCutterUtils.isLogWood(state);
-	}
-
-	protected boolean validLeaf(BlockPos pos)
-	{
-		IBlockState state = world.getBlockState(pos);
-
-		if (state.getBlock().isAir(state, world, pos))
-		{
-			return false;
-		}
-
-		if (pos.getY() <= originPos.getY())
-		{
-			return false;
-		}
-
-		if (leafState != null)
-		{
-			return state.getBlock() == leafState.getBlock() && state.getBlock().getMetaFromState(state) == leafState.getBlock().getMetaFromState(leafState);
-		}
-
-		return TreeCutterUtils.isTreeLeaves(state, world, pos);
-	}
-
 	@Override
-	public void onUpdate()
+	public void onEntityUpdate()
 	{
 		if (delayTime > 0 || world.isRemote)
 		{
@@ -171,55 +62,54 @@ public class EntityLumbering extends Entity
 			return;
 		}
 
-		if (entityPlayer == null || entityPlayer.isDead || originPos == null)
+		if (entityPlayer == null || entityPlayer.isDead)
 		{
 			setDead();
 
 			return;
 		}
 
-		if (lumberTargets == null || lumberLeaves == null)
+		if (!snapshot.isChecked())
 		{
-			checkForLumbering();
+			snapshot.checkForLumbering();
 
 			return;
 		}
 
-		if (lumberLeaves.isEmpty())
+		currentPos = snapshot.getTargets().poll();
+
+		if (currentPos == null)
 		{
 			setDead();
 
 			return;
 		}
-		else if (lumberTargets.isEmpty())
-		{
-			currentPos = lumberLeaves.poll();
 
-			if (currentPos != null)
+		if (TreeCutterUtils.isLogWood(world.getBlockState(currentPos)))
+		{
+			int prevDamage = entityPlayer.getHeldItemMainhand().getItemDamage();
+
+			if (TreeCutterUtils.harvestBlock(entityPlayer, currentPos))
 			{
-				for (BlockPos pos : BlockPos.getAllInBox(currentPos.add(4, 4, 4), currentPos.add(-4, -4, -4)))
+				entityPlayer.getHeldItemMainhand().setItemDamage(prevDamage);
+
+				for (BlockPos pos : BlockPos.getAllInBox(currentPos.add(5, 3, 5), currentPos.add(-5, -1, -5)))
 				{
 					IBlockState state = world.getBlockState(pos);
 
 					if (TreeCutterUtils.isTreeLeaves(state, world, pos) && !decayedLeaves.contains(pos))
 					{
-						world.scheduleBlockUpdate(pos, state.getBlock(), 20 + rand.nextInt(8), 1);
-						world.playEvent(2001, pos, Block.getStateId(state));
+						world.scheduleBlockUpdate(pos, state.getBlock(), 30 + rand.nextInt(10), 1);
+
+						if (rand.nextInt(5) == 0)
+						{
+							world.playEvent(2001, pos, Block.getStateId(state));
+						}
 
 						decayedLeaves.add(pos);
 					}
 				}
-			}
 
-			return;
-		}
-
-		currentPos = lumberTargets.poll();
-
-		if (currentPos != null && TreeCutterUtils.isLogWood(world.getBlockState(currentPos)))
-		{
-			if (harvestBlock(currentPos))
-			{
 				switch (++breakCount)
 				{
 					case 1:
@@ -238,39 +128,15 @@ public class EntityLumbering extends Entity
 		}
 	}
 
-	protected boolean harvestBlock(BlockPos pos)
-	{
-		if (entityPlayer == null || !(entityPlayer instanceof EntityPlayerMP))
-		{
-			return false;
-		}
-
-		EntityPlayerMP player = (EntityPlayerMP)entityPlayer;
-		PlayerInteractionManager im = player.interactionManager;
-		IBlockState state = world.getBlockState(pos);
-		int prevDamage = player.getHeldItemMainhand().getItemDamage();
-
-		if (im.tryHarvestBlock(pos))
-		{
-			player.getHeldItemMainhand().setItemDamage(prevDamage);
-
-			if (TreeCutter.proxy.isSinglePlayer())
-			{
-				world.playEvent(2001, pos, Block.getStateId(state));
-			}
-
-			return true;
-		}
-
-		return false;
-	}
-
 	@Override
 	public void setDead()
 	{
 		super.setDead();
 
-		LumberingUnit.get(entityPlayer).clearCache();
+		if (entityPlayer != null)
+		{
+			LumberingUnit.get(entityPlayer).clearCache();
+		}
 	}
 
 	@Override

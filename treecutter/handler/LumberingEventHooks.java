@@ -1,5 +1,11 @@
 package treecutter.handler;
 
+import java.util.Random;
+import java.util.Set;
+
+import com.google.common.collect.Sets;
+
+import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -12,10 +18,13 @@ import treecutter.capability.LumberingUnit;
 import treecutter.config.TreeCutterConfig;
 import treecutter.core.TreeCutter;
 import treecutter.entity.EntityLumbering;
+import treecutter.util.LumberingSnapshot;
 import treecutter.util.TreeCutterUtils;
 
 public class LumberingEventHooks
 {
+	private static final Random RANDOM = new Random();
+
 	private boolean lumbering;
 
 	@SubscribeEvent
@@ -45,18 +54,21 @@ public class LumberingEventHooks
 			return;
 		}
 
-		IBlockState state = event.getState();
-
-		if (!TreeCutterUtils.isLogWood(state))
+		if (!TreeCutterUtils.isLogWood(event.getState()))
 		{
 			return;
 		}
 
-		BlockPos pos = event.getPos();
-		EntityLumbering entity = LumberingUnit.get(player).getLumbering(pos);
-		int count = entity.getTargetCount();
+		LumberingSnapshot snapshot = LumberingUnit.get(player).getLumbering(event.getPos());
 
-		if (count <= 0 || !player.capabilities.isCreativeMode && held.getMaxDamage() - held.getItemDamage() < count - 1)
+		if (snapshot.isEmpty())
+		{
+			return;
+		}
+
+		int count = snapshot.getTargetCount();
+
+		if (!player.capabilities.isCreativeMode && held.getMaxDamage() - held.getItemDamage() < count - 1)
 		{
 			return;
 		}
@@ -78,12 +90,7 @@ public class LumberingEventHooks
 	@SubscribeEvent
 	public void onBlockBreak(BreakEvent event)
 	{
-		if (lumbering)
-		{
-			return;
-		}
-
-		if (!TreeCutterConfig.treeCutter)
+		if (lumbering || !TreeCutterConfig.treeCutter)
 		{
 			return;
 		}
@@ -108,54 +115,65 @@ public class LumberingEventHooks
 			return;
 		}
 
-		IBlockState state = event.getState();
-
-		if (!TreeCutterUtils.isLogWood(state))
+		if (!TreeCutterUtils.isLogWood(event.getState()))
 		{
 			return;
 		}
 
-		BlockPos pos = event.getPos();
+		BlockPos originPos = event.getPos();
 
 		if (!TreeCutterConfig.fancyLumbering || !TreeCutter.proxy.isSinglePlayer())
 		{
-			QuickLumbering quickLumbering = new QuickLumbering(world, player, pos);
+			LumberingSnapshot snapshot = LumberingUnit.get(player).getLumbering(originPos);
 
-			quickLumbering.checkForLumbering();
-
-			if (quickLumbering.getTargetCount() <= 0)
+			if (snapshot.isEmpty())
 			{
 				return;
 			}
 
 			lumbering = true;
-			quickLumbering.doLumbering();
+
+			Set<BlockPos> decayedLeaves = Sets.newHashSet();
+
+			while (!snapshot.getTargets().isEmpty())
+			{
+				BlockPos target = snapshot.getTargets().poll();
+
+				if (TreeCutterUtils.isLogWood(world.getBlockState(target)) && TreeCutterUtils.harvestBlock(player, target))
+				{
+					for (BlockPos pos : BlockPos.getAllInBox(target.add(5, 3, 5), target.add(-5, -1, -5)))
+					{
+						IBlockState state = world.getBlockState(pos);
+
+						if (TreeCutterUtils.isTreeLeaves(state, world, pos) && !decayedLeaves.contains(pos))
+						{
+							world.scheduleBlockUpdate(pos, state.getBlock(), 30 + RANDOM.nextInt(10), 1);
+
+							if (TreeCutter.proxy.isSinglePlayer() && RANDOM.nextInt(5) == 0)
+							{
+								world.playEvent(2001, pos, Block.getStateId(state));
+							}
+
+							decayedLeaves.add(pos);
+						}
+					}
+				}
+			}
+
 			lumbering = false;
 		}
 		else
 		{
-			EntityLumbering entity = LumberingUnit.get(player).getCachedLumbering();
+			LumberingSnapshot snapshot = LumberingUnit.get(player).getLumbering(originPos, false);
 
-			if (entity == null)
-			{
-				entity = LumberingUnit.get(player).getLumbering(pos);
-			}
-
-			if (entity.getOriginPos() != pos)
-			{
-				return;
-			}
-
-			int count = entity.getTargetCount();
-
-			if (count <= 0)
+			if (snapshot.isEmpty() || !snapshot.equals(world, originPos))
 			{
 				return;
 			}
 
 			if (!player.capabilities.isCreativeMode)
 			{
-				int amount = count - 1;
+				int amount = snapshot.getTargetCount() - 1;
 
 				if (held.getMaxDamage() - held.getItemDamage() < amount)
 				{
@@ -165,7 +183,7 @@ public class LumberingEventHooks
 				held.damageItem(amount, player);
 			}
 
-			world.spawnEntity(entity);
+			world.spawnEntity(new EntityLumbering(snapshot, player));
 		}
 	}
 }

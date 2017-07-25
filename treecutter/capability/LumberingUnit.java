@@ -6,50 +6,48 @@ import org.apache.commons.lang3.ObjectUtils;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.math.BlockPos;
-import treecutter.entity.EntityLumbering;
+import treecutter.util.LumberingSnapshot;
 
 public class LumberingUnit
 {
 	private final EntityPlayer player;
 
-	private EntityLumbering lumberingCache;
+	private LumberingSnapshot snapshot;
 
 	public LumberingUnit(EntityPlayer player)
 	{
 		this.player = player;
 	}
 
-	public EntityLumbering getLumbering(BlockPos pos)
+	public LumberingSnapshot getLumbering(BlockPos pos)
 	{
 		return getLumbering(pos, true);
 	}
 
-	public EntityLumbering getLumbering(BlockPos pos, boolean refresh)
+	public LumberingSnapshot getLumbering(BlockPos pos, boolean refresh)
 	{
-		if (lumberingCache == null || lumberingCache.isDead || refresh && lumberingCache.getOriginPos() != pos)
+		if (snapshot == null || refresh && !snapshot.equals(player.world, pos))
 		{
-			lumberingCache = new EntityLumbering(player.world, player, pos);
+			snapshot = new LumberingSnapshot(player.world, pos);
 		}
 
-		if (!refresh && lumberingCache.getOriginPos() != pos)
+		if (!snapshot.isChecked())
 		{
-			return lumberingCache;
+			snapshot.checkForLumbering();
 		}
 
-		lumberingCache.checkForLumbering();
-
-		return lumberingCache;
+		return snapshot;
 	}
 
 	@Nullable
-	public EntityLumbering getCachedLumbering()
+	public LumberingSnapshot getCachedLumbering()
 	{
-		return lumberingCache;
+		return snapshot;
 	}
 
 	public void clearCache()
 	{
-		lumberingCache = null;
+		snapshot = null;
 	}
 
 	public static LumberingUnit get(EntityPlayer player)
