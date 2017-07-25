@@ -16,6 +16,12 @@ public class ClientEventHooks
 		if (event.getModID().equals(TreeCutter.MODID))
 		{
 			TreeCutterConfig.syncConfig();
+
+			if (event.isWorldRunning())
+			{
+				TreeCutterConfig.refreshBlocks();
+				TreeCutterConfig.refreshItems();
+			}
 		}
 	}
 }

@@ -1,5 +1,9 @@
 
 treecutter.config.title=TreeCutterの設定
+treecutter.config.treeCutter=木の伐採
+treecutter.config.treeCutter.tooltip=木の伐採を有効にします。
+treecutter.config.fancyLumbering=描画優先の伐採
+treecutter.config.fancyLumbering.tooltip=描画優先の伐採を有効にします。
 treecutter.config.effectiveItems=効果のあるアイテム
 treecutter.config.effectiveItems.tooltip=伐採効果のあるアイテムを指定します。何も指定しなければ、自動で判別されます。
 treecutter.config.excludedBlocks=対象外のブロック

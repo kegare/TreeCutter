@@ -14,6 +14,7 @@ import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import net.minecraftforge.fml.client.config.GuiConfigEntries.IConfigEntry;
 import net.minecraftforge.fml.common.Loader;
+import net.minecraftforge.fml.relauncher.FMLLaunchHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import treecutter.client.config.SelectBlocksEntry;
@@ -25,6 +26,8 @@ public class TreeCutterConfig
 {
 	public static Configuration config;
 
+	public static boolean treeCutter;
+	public static boolean fancyLumbering;
 	public static ConfigItems effectiveItems = new ConfigItems();
 	public static ConfigBlocks excludedBlocks = new ConfigBlocks();
 	public static double treeHardness;
@@ -71,10 +74,29 @@ public class TreeCutterConfig
 			loadConfig();
 		}
 
+		Side side = FMLLaunchHandler.side();
+
 		String category = Configuration.CATEGORY_GENERAL;
 		Property prop;
 		String comment;
 		List<String> propOrder = Lists.newArrayList();
+
+		prop = config.get(category, "treeCutter", true);
+		prop.setLanguageKey("treecutter.config." + prop.getName());
+		comment = I18n.translateToLocal(prop.getLanguageKey() + ".tooltip");
+		prop.setComment(comment);
+		propOrder.add(prop.getName());
+		treeCutter = prop.getBoolean(treeCutter);
+
+		if (side.isClient())
+		{
+			prop = config.get(category, "fancyLumbering", true);
+			prop.setLanguageKey("treecutter.config." + prop.getName());
+			comment = I18n.translateToLocal(prop.getLanguageKey() + ".tooltip");
+			prop.setComment(comment);
+			propOrder.add(prop.getName());
+			fancyLumbering = prop.getBoolean(fancyLumbering);
+		}
 
 		prop = config.get(category, "effectiveItems", new String[0]);
 		prop.setConfigEntryClass(selectItems);

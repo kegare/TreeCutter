@@ -21,9 +21,19 @@ public class LumberingUnit
 
 	public EntityLumbering getLumbering(BlockPos pos)
 	{
-		if (lumberingCache == null || lumberingCache.getOriginPos() != pos)
+		return getLumbering(pos, true);
+	}
+
+	public EntityLumbering getLumbering(BlockPos pos, boolean refresh)
+	{
+		if (lumberingCache == null || lumberingCache.isDead || refresh && lumberingCache.getOriginPos() != pos)
 		{
 			lumberingCache = new EntityLumbering(player.world, player, pos);
+		}
+
+		if (!refresh && lumberingCache.getOriginPos() != pos)
+		{
+			return lumberingCache;
 		}
 
 		lumberingCache.checkForLumbering();

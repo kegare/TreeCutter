@@ -10,15 +10,29 @@ import net.minecraftforge.event.world.BlockEvent.BreakEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import treecutter.capability.LumberingUnit;
 import treecutter.config.TreeCutterConfig;
+import treecutter.core.TreeCutter;
 import treecutter.entity.EntityLumbering;
 import treecutter.util.TreeCutterUtils;
 
 public class LumberingEventHooks
 {
+	private boolean lumbering;
+
 	@SubscribeEvent
 	public void onBreakSpeed(BreakSpeed event)
 	{
+		if (!TreeCutterConfig.treeCutter)
+		{
+			return;
+		}
+
 		EntityPlayer player = event.getEntityPlayer();
+
+		if (!TreeCutter.proxy.isSinglePlayer())
+		{
+			return;
+		}
+
 		ItemStack held = player.getHeldItemMainhand();
 
 		if (!TreeCutterConfig.isEffectiveItem(held))
@@ -64,6 +78,16 @@ public class LumberingEventHooks
 	@SubscribeEvent
 	public void onBlockBreak(BreakEvent event)
 	{
+		if (lumbering)
+		{
+			return;
+		}
+
+		if (!TreeCutterConfig.treeCutter)
+		{
+			return;
+		}
+
 		World world = event.getWorld();
 
 		if (world.isRemote)
@@ -92,37 +116,56 @@ public class LumberingEventHooks
 		}
 
 		BlockPos pos = event.getPos();
-		EntityLumbering entity = LumberingUnit.get(player).getCachedLumbering();
 
-		if (entity == null)
+		if (!TreeCutterConfig.fancyLumbering || !TreeCutter.proxy.isSinglePlayer())
 		{
-			entity = LumberingUnit.get(player).getLumbering(pos);
-		}
+			QuickLumbering quickLumbering = new QuickLumbering(world, player, pos);
 
-		if (entity.getOriginPos() != pos)
-		{
-			return;
-		}
+			quickLumbering.checkForLumbering();
 
-		int count = entity.getTargetCount();
-
-		if (count <= 0)
-		{
-			return;
-		}
-
-		if (!player.capabilities.isCreativeMode)
-		{
-			int amount = count - 1;
-
-			if (held.getMaxDamage() - held.getItemDamage() < amount)
+			if (quickLumbering.getTargetCount() <= 0)
 			{
 				return;
 			}
 
-			held.damageItem(amount, player);
+			lumbering = true;
+			quickLumbering.doLumbering();
+			lumbering = false;
 		}
+		else
+		{
+			EntityLumbering entity = LumberingUnit.get(player).getCachedLumbering();
 
-		world.spawnEntity(entity);
+			if (entity == null)
+			{
+				entity = LumberingUnit.get(player).getLumbering(pos);
+			}
+
+			if (entity.getOriginPos() != pos)
+			{
+				return;
+			}
+
+			int count = entity.getTargetCount();
+
+			if (count <= 0)
+			{
+				return;
+			}
+
+			if (!player.capabilities.isCreativeMode)
+			{
+				int amount = count - 1;
+
+				if (held.getMaxDamage() - held.getItemDamage() < amount)
+				{
+					return;
+				}
+
+				held.damageItem(amount, player);
+			}
+
+			world.spawnEntity(entity);
+		}
 	}
 }

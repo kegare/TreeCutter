@@ -1,5 +1,9 @@
 
 treecutter.config.title=TreeCutter Configuration
+treecutter.config.treeCutter=Tree Cutter
+treecutter.config.treeCutter.tooltip=Whether to enable tree cutter.
+treecutter.config.fancyLumbering=Fancy Lumbering
+treecutter.config.fancyLumbering.tooltip=Whether to enable fancy lumbering effect.
 treecutter.config.effectiveItems=Effective Items
 treecutter.config.effectiveItems.tooltip=Specify the effective items for lumbering. If you do not specify anything, it will be checked automatically.
 treecutter.config.excludedBlocks=Excluded Blocks
