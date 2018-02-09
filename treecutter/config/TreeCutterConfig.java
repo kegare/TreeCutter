@@ -123,7 +123,7 @@ public class TreeCutterConfig
 		propOrder.add(prop.getName());
 		treeHardness = prop.getDouble(treeHardness);
 
-		prop = config.get(category, "sneakAction", false);
+		prop = config.get(category, "sneakAction", true);
 		prop.setLanguageKey("treecutter.config." + prop.getName());
 		comment = I18n.translateToLocal(prop.getLanguageKey() + ".tooltip");
 		prop.setComment(comment);

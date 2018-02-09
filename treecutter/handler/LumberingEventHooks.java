@@ -10,10 +10,12 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.world.BlockEvent.BreakEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent.PlayerLoggedOutEvent;
 import treecutter.capability.LumberingUnit;
 import treecutter.config.TreeCutterConfig;
 import treecutter.core.TreeCutter;
@@ -24,6 +26,7 @@ import treecutter.util.TreeCutterUtils;
 public class LumberingEventHooks
 {
 	private static final Random RANDOM = new Random();
+	private static final Set<String> SNEAK_INFO = Sets.newHashSet();
 
 	private boolean lumbering;
 
@@ -49,13 +52,18 @@ public class LumberingEventHooks
 			return;
 		}
 
-		if (TreeCutterConfig.sneakAction && !player.isSneaking())
+		if (!TreeCutterUtils.isLogWood(event.getState()))
 		{
 			return;
 		}
 
-		if (!TreeCutterUtils.isLogWood(event.getState()))
+		if (TreeCutterConfig.sneakAction && !player.isSneaking())
 		{
+			if (!player.world.isRemote && SNEAK_INFO.add(player.getCachedUniqueIdString()))
+			{
+				player.sendStatusMessage(new TextComponentTranslation("treecutter.message.sneak"), true);
+			}
+
 			return;
 		}
 
@@ -110,13 +118,18 @@ public class LumberingEventHooks
 			return;
 		}
 
-		if (TreeCutterConfig.sneakAction && !player.isSneaking())
+		if (!TreeCutterUtils.isLogWood(event.getState()))
 		{
 			return;
 		}
 
-		if (!TreeCutterUtils.isLogWood(event.getState()))
+		if (TreeCutterConfig.sneakAction && !player.isSneaking())
 		{
+			if (SNEAK_INFO.add(player.getCachedUniqueIdString()))
+			{
+				player.sendStatusMessage(new TextComponentTranslation("treecutter.message.sneak"), true);
+			}
+
 			return;
 		}
 
@@ -185,5 +198,11 @@ public class LumberingEventHooks
 
 			world.spawnEntity(new EntityLumbering(snapshot, player));
 		}
+	}
+
+	@SubscribeEvent
+	public void playerLoggedOut(PlayerLoggedOutEvent event)
+	{
+		SNEAK_INFO.remove(event.player.getCachedUniqueIdString());
 	}
 }

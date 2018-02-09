@@ -28,6 +28,8 @@ treecutter.gui.select.item=アイテムを選択してください
 treecutter.gui.select.item.multiple=アイテムを選択してください
 treecutter.gui.select.item.selected=%dつのアイテムが選択済み
 
+treecutter.message.sneak=木の伐採をするにはしゃがみながらする必要があります
+
 treecutter.version.message=%s の新しいバージョンが利用可能です
 treecutter.version.message.beta=あなたは %s のベータバージョンを利用しています
 treecutter.version.message.alpha=あなたは %s のアルファバージョンを利用しています

@@ -15,7 +15,7 @@ import net.minecraftforge.fml.common.network.NetworkCheckHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import treecutter.capability.TreeCutterCapabilities;
-import treecutter.client.TreeCutterRenderingRegistry;
+import treecutter.client.TreeCutterClient;
 import treecutter.client.handler.ClientEventHooks;
 import treecutter.config.TreeCutterConfig;
 import treecutter.handler.LumberingEventHooks;
@@ -25,7 +25,8 @@ import treecutter.util.Version;
 (
 	modid = TreeCutter.MODID,
 	guiFactory = "treecutter.client.config.TreeCutterGuiFactory",
-	updateJSON = "https://raw.githubusercontent.com/kegare/TreeCutter/master/treecutter.json"
+	updateJSON = "https://raw.githubusercontent.com/kegare/TreeCutter/master/treecutter.json",
+	acceptedMinecraftVersions = "[1.12,)"
 )
 public class TreeCutter
 {
@@ -63,7 +64,7 @@ public class TreeCutter
 
 		TreeCutterConfig.initEntries();
 
-		TreeCutterRenderingRegistry.registerRenderers();
+		TreeCutterClient.registerRenderers();
 
 		TreeCutterCapabilities.registerCapabilities();
 	}

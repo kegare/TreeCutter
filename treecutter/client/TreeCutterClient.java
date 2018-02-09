@@ -5,7 +5,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import treecutter.entity.EntityLumbering;
 
-public class TreeCutterRenderingRegistry
+public class TreeCutterClient
 {
 	@SideOnly(Side.CLIENT)
 	public static void registerRenderers()

@@ -113,7 +113,7 @@ public class EntityLumbering extends Entity
 				switch (++breakCount)
 				{
 					case 1:
-						delayTime = 5;
+						delayTime = 4;
 						break;
 					case 2:
 						delayTime = 3;

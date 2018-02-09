@@ -50,14 +50,14 @@ public class LumberingSnapshot
 		return lumberTargets == null || lumberTargets.isEmpty();
 	}
 
-	public boolean equals(World worldIn, BlockPos posIn)
+	public boolean equals(World worldIn, BlockPos pos)
 	{
-		if (worldIn == null || posIn == null)
+		if (worldIn == null || pos == null)
 		{
 			return false;
 		}
 
-		return world.provider.getDimensionType() == worldIn.provider.getDimensionType() && originPos.equals(posIn);
+		return world.provider.getDimensionType() == worldIn.provider.getDimensionType() && originPos.equals(pos);
 	}
 
 	public int getTargetCount()

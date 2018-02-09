@@ -28,6 +28,8 @@ treecutter.gui.select.item=Select the item
 treecutter.gui.select.item.multiple=Select the items
 treecutter.gui.select.item.selected=%d items selected
 
+treecutter.message.sneak=TreeCutter works while you are sneaking
+
 treecutter.version.message=A new %s version is available
 treecutter.version.message.beta=You are using a Beta version of %s
 treecutter.version.message.alpha=You are using an Alpha version of %s
