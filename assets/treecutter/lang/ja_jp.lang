@@ -14,6 +14,8 @@ treecutter.config.treeHardness=伐採時の木の硬さ
 treecutter.config.treeHardness.tooltip=伐採時の木の硬さを指定します。数値が大きいほど硬くなります。
 treecutter.config.sneakAction=しゃがんで伐採
 treecutter.config.sneakAction.tooltip=しゃがんでいるときだけ伐採できるようにします。
+treecutter.config.nonSneakAction=しゃがまないで伐採
+treecutter.config.nonSneakAction.tooltip=しゃがんでいないときだけ伐採できるようにします。
 treecutter.config.versionNotice=バージョン通知
 treecutter.config.versionNotice.tooltip=TreeCutterのバージョンに関する通知メッセージを有効にします。
 

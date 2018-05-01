@@ -10,6 +10,7 @@ import com.google.common.collect.Lists;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.translation.I18n;
+import net.minecraftforge.common.config.ConfigCategory;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.common.config.Property;
 import net.minecraftforge.fml.client.config.GuiConfigEntries.IConfigEntry;
@@ -32,6 +33,7 @@ public class TreeCutterConfig
 	public static ConfigBlocks excludedBlocks = new ConfigBlocks();
 	public static double treeHardness;
 	public static boolean sneakAction;
+	public static boolean nonSneakAction;
 	public static boolean versionNotice;
 
 	public static Class<? extends IConfigEntry> selectBlocks, selectItems;
@@ -123,12 +125,27 @@ public class TreeCutterConfig
 		propOrder.add(prop.getName());
 		treeHardness = prop.getDouble(treeHardness);
 
-		prop = config.get(category, "sneakAction", true);
+		prop = config.get(category, "sneakAction", false);
 		prop.setLanguageKey("treecutter.config." + prop.getName());
 		comment = I18n.translateToLocal(prop.getLanguageKey() + ".tooltip");
 		prop.setComment(comment);
 		propOrder.add(prop.getName());
 		sneakAction = prop.getBoolean(sneakAction);
+
+		prop = config.get(category, "nonSneakAction", true);
+		prop.setLanguageKey("treecutter.config." + prop.getName());
+		comment = I18n.translateToLocal(prop.getLanguageKey() + ".tooltip");
+		prop.setComment(comment);
+		propOrder.add(prop.getName());
+		nonSneakAction = prop.getBoolean(nonSneakAction);
+
+		if (sneakAction && nonSneakAction)
+		{
+			ConfigCategory configCategory = config.getCategory(category);
+
+			sneakAction = configCategory.get("sneakAction").setToDefault().getBoolean();
+			nonSneakAction = configCategory.get("nonSneakAction").setToDefault().getBoolean();
+		}
 
 		if (side.isClient())
 		{

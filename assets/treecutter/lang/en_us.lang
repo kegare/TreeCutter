@@ -13,7 +13,9 @@ treecutter.config.excludedBlocks.tooltip=Specify the excluded blocks for lumberi
 treecutter.config.treeHardness=Tree Hardness
 treecutter.config.treeHardness.tooltip=Specify the tree hardness for lumbering.
 treecutter.config.sneakAction=Sneak Action
-treecutter.config.sneakAction.tooltip=Wether to require sneak action for lumbering.
+treecutter.config.sneakAction.tooltip=Whether to require sneak action for lumbering.
+treecutter.config.nonSneakAction=Non Sneak Action
+treecutter.config.nonSneakAction.tooltip=Whether to require non sneak action for lumbering.
 treecutter.config.versionNotice=Version Notice
 treecutter.config.versionNotice.tooltip=Whether to enable some notice messages for TreeCutter version.
 

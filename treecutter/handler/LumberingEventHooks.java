@@ -10,7 +10,9 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextComponentTranslation;
+import net.minecraft.util.text.translation.I18n;
 import net.minecraft.world.World;
 import net.minecraftforge.event.entity.player.PlayerEvent.BreakSpeed;
 import net.minecraftforge.event.world.BlockEvent.BreakEvent;
@@ -64,6 +66,11 @@ public class LumberingEventHooks
 				player.sendStatusMessage(new TextComponentTranslation("treecutter.message.sneak"), true);
 			}
 
+			return;
+		}
+
+		if (TreeCutterConfig.nonSneakAction && player.isSneaking())
+		{
 			return;
 		}
 
@@ -127,9 +134,14 @@ public class LumberingEventHooks
 		{
 			if (SNEAK_INFO.add(player.getCachedUniqueIdString()))
 			{
-				player.sendStatusMessage(new TextComponentTranslation("treecutter.message.sneak"), true);
+				player.sendStatusMessage(new TextComponentString(I18n.translateToLocal("treecutter.message.sneak")), true);
 			}
 
+			return;
+		}
+
+		if (TreeCutterConfig.nonSneakAction && player.isSneaking())
+		{
 			return;
 		}
 
